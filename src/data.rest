@@ -1,0 +1,20 @@
+POST http://localhost:3001/products HTTP/1.1
+content-type: application/json
+
+{
+  "name": "Cute",
+  "price": 52.95,
+  "description": "The Cute backpack is super eye catching and pairs well with small and medium.",
+  "countInStock": 50,
+  "mainImageUrl": "https://puptastic-au-assets.s3.ap-southeast-2.amazonaws.com/cute/cute1edited.jpg",
+  "allImages": [
+    "https://puptastic-au-assets.s3.ap-southeast-2.amazonaws.com/cute/1-min.png",
+    "https://puptastic-au-assets.s3.ap-southeast-2.amazonaws.com/cute/2-min.png",
+    "https://puptastic-au-assets.s3.ap-southeast-2.amazonaws.com/cute/3-min.png",
+    "https://puptastic-au-assets.s3.ap-southeast-2.amazonaws.com/cute/4-min.png",
+    "https://puptastic-au-assets.s3.ap-southeast-2.amazonaws.com/cute/5-min.png",
+    "https://puptastic-au-assets.s3.ap-southeast-2.amazonaws.com/cute/6-min.png",
+    "https://puptastic-au-assets.s3.ap-southeast-2.amazonaws.com/cute/7-min.png"
+  ],
+  "rating": 4.8
+}
