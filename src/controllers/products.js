@@ -1,19 +1,61 @@
 import { Router } from "express";
 import Product from "../models/product.js";
-import {
-  databaseConnect,
-  databaseClear,
-  databaseClose,
-} from "../utils/database.js";
+import dotenv from "dotenv";
+import { S3Client, GetObjectCommand } from "@aws-sdk/client-s3";
+import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
+import { databaseClear } from "../utils/database.js";
+
+dotenv.config();
+
+const bucketName = process.env.BUCKET_NAME;
+const bucketRegion = process.env.BUCKET_REGION;
+const accessKey = process.env.ACCESS_KEY;
+const secretAccessKey = process.env.SECRET_ACCESS_KEY;
+
+const s3 = new S3Client({
+  credentials: {
+    accessKeyId: accessKey,
+    secretAccessKey: secretAccessKey,
+  },
+  region: bucketRegion,
+});
 
 const router = Router();
 
 // GET all products
-router.get("/", async (request, response, next) => {
+router.get("/", async (req, res, next) => {
   try {
     const products = await Product.find({});
-    response.status(200).json({
-      message: "Hello, from the products controller!",
+
+    for (const product of products) {
+      // Generate signed URL for the main image
+      const mainImageParams = {
+        Bucket: bucketName,
+        Key: product.mainImageUrl, // Capital 'K'
+      };
+      const mainImageUrl = await getSignedUrl(
+        s3,
+        new GetObjectCommand(mainImageParams),
+        { expiresIn: 3600 }
+      );
+      product.mainImageUrl = mainImageUrl;
+
+      // Generate signed URLs for all images
+      const signedUrls = await Promise.all(
+        product.allImages.map(async (imageKey) => {
+          const getObjectParams = {
+            Bucket: bucketName,
+            Key: imageKey,
+          };
+          const command = new GetObjectCommand(getObjectParams);
+          return getSignedUrl(s3, command, { expiresIn: 3600 });
+        })
+      );
+      product.allImages = signedUrls;
+    }
+
+    res.status(200).json({
+      message: "Products fetched successfully!",
       products,
     });
   } catch (error) {
@@ -21,25 +63,11 @@ router.get("/", async (request, response, next) => {
   }
 });
 
-// POST a new product
-router.post("/", async (request, response, next) => {
-  try {
-    const bodyData = request.body;
-    const product = await Product.create(bodyData);
-    response.status(201).json({
-      message: "Product created successfully!",
-      product,
-    });
-  } catch (error) {
-    next(error);
-  }
-});
-
 // DELETE all products
-router.get("/deleteall", async (request, response, next) => {
+router.get("/deleteall", async (req, res, next) => {
   try {
     await databaseClear();
-    response.status(200).json({
+    res.status(200).json({
       message: "All products have been deleted.",
     });
   } catch (error) {
