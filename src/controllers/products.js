@@ -4,8 +4,9 @@ import dotenv from "dotenv";
 import { S3Client, GetObjectCommand } from "@aws-sdk/client-s3";
 import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
 import { databaseClear } from "../utils/database.js";
-
 dotenv.config();
+
+const router = Router();
 
 const bucketName = process.env.BUCKET_NAME;
 const bucketRegion = process.env.BUCKET_REGION;
@@ -20,10 +21,12 @@ const s3 = new S3Client({
   region: bucketRegion,
 });
 
-const router = Router();
+
 
 // GET all products
 router.get("/", async (req, res, next) => {
+
+  console.log("GET /products");
   try {
     const products = await Product.find({});
 
@@ -31,12 +34,11 @@ router.get("/", async (req, res, next) => {
       // Generate signed URL for the main image
       const mainImageParams = {
         Bucket: bucketName,
-        Key: product.mainImageUrl, // Capital 'K'
+        Key: product.mainImageUrl, 
       };
       const mainImageUrl = await getSignedUrl(
         s3,
-        new GetObjectCommand(mainImageParams),
-        { expiresIn: 3600 }
+        new GetObjectCommand(mainImageParams)
       );
       product.mainImageUrl = mainImageUrl;
 
@@ -57,6 +59,20 @@ router.get("/", async (req, res, next) => {
     res.status(200).json({
       message: "Products fetched successfully!",
       products,
+    });
+  } catch (error) {
+    next(error);
+  }
+});
+
+// POST a new product
+router.post("/", async (req, res, next) => {
+  try {
+    const product = new Product(req.body);
+    await product.save();
+    res.status(201).json({
+      message: "Product added successfully!",
+      product,
     });
   } catch (error) {
     next(error);
