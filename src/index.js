@@ -6,7 +6,6 @@ import {
 } from "./utils/database.js";
 
 async function startServer() {
-  // https://www.youtube.com/watch?v=eQAIojcArRY&t=520s
   try {
     console.log("Connecting to the database...");
     await databaseConnect();

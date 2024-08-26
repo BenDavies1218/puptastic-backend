@@ -1,6 +1,7 @@
 import express from "express";
 import cors from "cors";
 import productsRouter from "./controllers/products.js";
+import checkoutRouter from "./controllers/checkout.js";
 
 const app = express();
 
@@ -12,6 +13,8 @@ app.get("/", (req, res) => {
 });
 
 app.use("/products", productsRouter);
+
+app.use("/checkout", checkoutRouter);
 
 // 404 HANDLING ROUTE
 app.use((req, res) => {
